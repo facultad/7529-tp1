@@ -166,6 +166,8 @@ class TP1TestCase(unittest.TestCase):
                     continue
                 if v == w:
                     continue
+                #for recorrido in tp1.grafo.get_recorridos(u,v):
+                    #print [ tp1.grafo.get_node_data(x).description for x in recorrido ]
                 cantidad_total_caminos_minimos += (
                         tp1.grafo.get_cantidad_caminos_minimos_con_intermediario(u,w,v) )
 

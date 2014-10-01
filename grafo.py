@@ -11,6 +11,7 @@ class Grafo:
         self.node_data = []
         self.vertices = []
         self.cantidad_caminos_minimos = []
+        self.recorridos = []
         for i in xrange(cantidad_vertices):
             self.add_node()
         for peso in pesos:
@@ -33,10 +34,14 @@ class Grafo:
         self.cantidad_vertices += 1
         self.vertices.append({})
         self.node_data.append(node_data)
+
         self.cantidad_caminos_minimos.append(
+            [None for i in xrange(self.cantidad_vertices - 1)])
+        self.recorridos.append(
             [None for i in xrange(self.cantidad_vertices - 1)])
         for i in self.iternodes():
             self.cantidad_caminos_minimos[i].append(None)
+            self.recorridos[i].append(None)
             
         return self.cantidad_vertices - 1
 
@@ -137,6 +142,20 @@ class Grafo:
                     self.get_recorrido(v, u, intentar_al_reves=False))
         raise Exception('Debe calcular previamente el camino mínimo.')
 
+    def get_recorridos(self, u, v):
+        if u==v:
+          return [[u]]
+        if u in self.padre:
+            if self.recorridos[u][v] is None:
+                self.recorridos[u][v] = []
+                for w in self.padre[u][v]:
+                    for recorrido in self.get_recorridos(u,w):
+                        self.recorridos[u][v].append(recorrido+[v])
+            return self.recorridos[u][v]
+        raise Exception('Debe calcular previamente el camino mínimo.')
+
+        
+
     def iternodes(self):
         return xrange(self.cantidad_vertices)
 
@@ -210,7 +229,7 @@ class DijkstraTestCase(unittest.TestCase):
         self.assertEqual(
             grafo.get_cantidad_caminos_minimos(4,5),2)
 
-    def get_cantidad_caminos_minimos_con_intermediario(self):
+    def test_cantidad_caminos_minimos_con_intermediario(self):
  
         grafo = Grafo()
 
@@ -246,12 +265,63 @@ class DijkstraTestCase(unittest.TestCase):
             grafo.get_cantidad_caminos_minimos_con_intermediario(0,10,13),
             10)
         self.assertEqual(
-            grafo.get_cantidad_caminos_minimos_con_intermediario(0,1,2),
+            grafo.get_cantidad_caminos_minimos_con_intermediario(0,1,8),
             2)
         self.assertEqual(
             grafo.get_cantidad_caminos_minimos_con_intermediario(2,5,11),
             1)
        
+    def validar_recorrido(self, grafo, u, v, recorridos_esperados):
+        recorridos = grafo.get_recorridos(u,v)
+        self.assertEqual(len(recorridos), len(recorridos_esperados))
+        for r in recorridos:
+            self.assertIn(r, recorridos_esperados)
+
+    def test_recorridos(self):
+ 
+        grafo = Grafo()
+
+        for i in xrange(14):
+            grafo.add_node()
+
+        grafo.connect(0,1,both=True)
+        grafo.connect(0,2,both=True)
+        grafo.connect(1,3,both=True)
+        grafo.connect(1,4,both=True)
+        grafo.connect(2,5,both=True)
+        grafo.connect(2,6,both=True)
+        grafo.connect(2,7,both=True)
+        grafo.connect(3,8,both=True)
+        grafo.connect(4,8,both=True)
+        grafo.connect(5,9,both=True)
+        grafo.connect(6,9,both=True)
+        grafo.connect(7,9,both=True)
+        grafo.connect(8,10,both=True)
+        grafo.connect(9,10,both=True)
+        grafo.connect(10,11,both=True)
+        grafo.connect(10,12,both=True)
+        grafo.connect(11,13,both=True)
+        grafo.connect(12,13,both=True)
+
+        for i in grafo.iternodes():
+            grafo.calcular_camino_minimo(i)
+
+        self.validar_recorrido(grafo,0,8,
+            [[0,1,3,8],
+              [0,1,4,8],
+              ])
+        self.validar_recorrido(grafo,0,10,
+            [[0,1,3,8,10],
+              [0,1,4,8,10],
+              [0,2,5,9,10],
+              [0,2,6,9,10],
+              [0,2,7,9,10],
+              ])
+        self.validar_recorrido(grafo,7,3,
+            [[7,2,0,1,3],
+              [7,9,10,8,3],
+              ])
+
 
 if __name__ == '__main__':
     unittest.main()
