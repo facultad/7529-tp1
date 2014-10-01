@@ -24,9 +24,9 @@ class Node:
 class TP1:
 
     @staticmethod
-    def create_graph_from_gdf(filepath):
+    def create_grafo_from_gdf(filepath):
 
-        graph = Grafo()
+        grafo = Grafo()
 
         linetype = None
         
@@ -40,46 +40,53 @@ class TP1:
                     linetype = EDGEDEF_TYPE
                 elif linetype == NODEDEF_TYPE:
                     node = Node.create_node_from_gdf_line(line)
-                    id_to_node[node.id] = graph.add_node(node)
+                    id_to_node[node.id] = grafo.add_node(node)
                 elif linetype == EDGEDEF_TYPE:
                     id1, id2 = map(int, line.split(','))
-                    graph.connect(id_to_node[id1],id_to_node[id2], both=True)
+                    grafo.connect(id_to_node[id1],id_to_node[id2], both=True)
 
-        return graph
+        return grafo
 
     @staticmethod
     def create_from_gdf(filepath):
 
         tp1 = TP1()
-        tp1.graph = TP1.create_graph_from_gdf(filepath)
+        tp1.grafo = TP1.create_grafo_from_gdf(filepath)
         return tp1
 
     def get_popularidad(self):
 
         popularidad = []
-        for i in xrange(self.graph.cantidad_vertices):
+        for i in xrange(self.grafo.cantidad_vertices):
             popularidad.append([])
 
-        for u in self.graph.iternodes():
-            grado = self.graph.get_grado_salida(u)
-            popularidad[grado].append(self.graph.get_node_data(u))
+        for u in self.grafo.iternodes():
+            grado = self.grafo.get_grado_salida(u)
+            popularidad[grado].append(self.grafo.get_node_data(u))
 
         return popularidad
+
+    def get_influencias(self):
+        pass
+
+    def calcular_caminos_minimos(self):
+        for i in self.grafo.iternodes():
+            self.grafo.calcular_camino_minimo(i)
 
 
 class TP1TestCase(unittest.TestCase):
 
-    def verificar_adyacencias(self, graph, u, adys):
-        node = graph.get_node_data(u)
-        ady_ids = set([ graph.get_node_data(v).id for v in graph.ady(u)])
+    def verificar_adyacencias(self, grafo, u, adys):
+        node = grafo.get_node_data(u)
+        ady_ids = set([ grafo.get_node_data(v).id for v in grafo.ady(u)])
         self.assertEqual(ady_ids, adys, "%s == %s" % (ady_ids, adys))
 
-    def test_create_graph_from_gdf(self):
+    def test_create_grafo_from_gdf(self):
 
-        graph = TP1.create_graph_from_gdf('ejemplo_enunciado.gdf')
+        grafo = TP1.create_grafo_from_gdf('ejemplo_enunciado.gdf')
 
-        self.assertEqual(graph.cantidad_vertices, 11)
-        self.assertEqual(graph.cantidad_aristas, 17)
+        self.assertEqual(grafo.cantidad_vertices, 11)
+        self.assertEqual(grafo.cantidad_aristas, 17)
 
         adys = {}
         adys[1] = set([2,3,4,8,10])
@@ -93,16 +100,16 @@ class TP1TestCase(unittest.TestCase):
         adys[9] = set([4,5])
         adys[10] = set([1,3])
         adys[11] = set([4])
-        for i in xrange(graph.cantidad_vertices):
-            node = graph.get_node_data(i)
-            self.verificar_adyacencias(graph, i, adys[node.id])
+        for i in xrange(grafo.cantidad_vertices):
+            node = grafo.get_node_data(i)
+            self.verificar_adyacencias(grafo, i, adys[node.id])
     
-    def verificar_grado_salida(self, graph, u, grado_esperado):
-        self.assertEqual(graph.get_grado_salida(u), grado_esperado)
+    def verificar_grado_salida(self, grafo, u, grado_esperado):
+        self.assertEqual(grafo.get_grado_salida(u), grado_esperado)
 
     def test_get_grado_salida(self):
 
-        graph = TP1.create_graph_from_gdf('ejemplo_enunciado.gdf')
+        grafo = TP1.create_grafo_from_gdf('ejemplo_enunciado.gdf')
 
         grado_esperado = {}
         grado_esperado[1] = 5
@@ -117,9 +124,9 @@ class TP1TestCase(unittest.TestCase):
         grado_esperado[10] = 2
         grado_esperado[11] = 1
 
-        for i in graph.iternodes():
-            node = graph.get_node_data(i)
-            self.verificar_grado_salida(graph, i, grado_esperado[node.id])
+        for i in grafo.iternodes():
+            node = grafo.get_node_data(i)
+            self.verificar_grado_salida(grafo, i, grado_esperado[node.id])
 
     def verificar_popularidad(self, esperados, obtenidos):
         self.assertEqual(
@@ -138,7 +145,22 @@ class TP1TestCase(unittest.TestCase):
         self.verificar_popularidad(['Brenda','Tomas','Lorena'], popularidad[2])
         self.verificar_popularidad(['Nora'], popularidad[1])
         self.verificar_popularidad([], popularidad[0])
-        
+
+    def test_cantidad_caminos_minimos(self):
+
+        tp1 = TP1.create_from_gdf('ejemplo_enunciado.gdf')
+
+        tp1.calcular_caminos_minimos()
+
+        cantidad_total_caminos_minimos = 0
+        for u in tp1.grafo.iternodes():
+            for v in tp1.grafo.iternodes():
+                if u>=v:
+                    continue
+                cantidad_total_caminos_minimos += (
+                        tp1.grafo.get_cantidad_caminos_minimos(u,v) )
+
+        self.assertEqual(cantidad_total_caminos_minimos, 121)
 
 
 
