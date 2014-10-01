@@ -23,15 +23,12 @@ class Node:
 
 class TP1:
 
-    @staticmethod
-    def create_grafo_from_gdf(filepath):
-
-        grafo = Grafo()
-
+    def __init__(self, filepath):
+        self.grafo = Grafo()
+        self.vertice_from_id = {}
         linetype = None
         
         with open(filepath) as f:
-            id_to_node = {}
             for line in f:
                 line = line.strip()
                 if re_nodedef.match(line):
@@ -40,19 +37,12 @@ class TP1:
                     linetype = EDGEDEF_TYPE
                 elif linetype == NODEDEF_TYPE:
                     node = Node.create_node_from_gdf_line(line)
-                    id_to_node[node.id] = grafo.add_node(node)
+                    self.vertice_from_id[node.id] = self.grafo.add_node(node)
                 elif linetype == EDGEDEF_TYPE:
                     id1, id2 = map(int, line.split(','))
-                    grafo.connect(id_to_node[id1],id_to_node[id2], both=True)
-
-        return grafo
-
-    @staticmethod
-    def create_from_gdf(filepath):
-
-        tp1 = TP1()
-        tp1.grafo = TP1.create_grafo_from_gdf(filepath)
-        return tp1
+                    self.grafo.connect(
+                            self.vertice_from_id[id1],
+                            self.vertice_from_id[id2], both=True)
 
     def get_popularidad(self):
 
@@ -73,6 +63,8 @@ class TP1:
         for i in self.grafo.iternodes():
             self.grafo.calcular_camino_minimo(i)
 
+    def get_vertice_from_id(self, id):
+        return self.vertice_from_id[id]
 
 class TP1TestCase(unittest.TestCase):
 
@@ -83,7 +75,7 @@ class TP1TestCase(unittest.TestCase):
 
     def test_create_grafo_from_gdf(self):
 
-        grafo = TP1.create_grafo_from_gdf('ejemplo_enunciado.gdf')
+        grafo = TP1('ejemplo_enunciado.gdf').grafo
 
         self.assertEqual(grafo.cantidad_vertices, 11)
         self.assertEqual(grafo.cantidad_aristas, 17)
@@ -109,7 +101,7 @@ class TP1TestCase(unittest.TestCase):
 
     def test_get_grado_salida(self):
 
-        grafo = TP1.create_grafo_from_gdf('ejemplo_enunciado.gdf')
+        grafo = TP1('ejemplo_enunciado.gdf').grafo
 
         grado_esperado = {}
         grado_esperado[1] = 5
@@ -135,7 +127,7 @@ class TP1TestCase(unittest.TestCase):
 
     def test_get_popularidad(self):
 
-        tp1 = TP1.create_from_gdf('ejemplo_enunciado.gdf')
+        tp1 = TP1('ejemplo_enunciado.gdf')
 
         popularidad = tp1.get_popularidad()
 
@@ -148,7 +140,7 @@ class TP1TestCase(unittest.TestCase):
 
     def test_cantidad_caminos_minimos(self):
 
-        tp1 = TP1.create_from_gdf('ejemplo_enunciado.gdf')
+        tp1 = TP1('ejemplo_enunciado.gdf')
 
         tp1.calcular_caminos_minimos()
 
@@ -162,6 +154,43 @@ class TP1TestCase(unittest.TestCase):
 
         self.assertEqual(cantidad_total_caminos_minimos, 121)
 
+    def verificar_cantidad_caminos_minimos_con_intermediario(self, tp1, id, cantidad_esperada):
+
+        cantidad_total_caminos_minimos = 0
+        w = tp1.get_vertice_from_id(id)
+        for u in tp1.grafo.iternodes():
+            for v in tp1.grafo.iternodes():
+                if u>=v:
+                    continue
+                if u == w:
+                    continue
+                if v == w:
+                    continue
+                cantidad_total_caminos_minimos += (
+                        tp1.grafo.get_cantidad_caminos_minimos_con_intermediario(u,w,v) )
+
+        self.assertEqual(cantidad_total_caminos_minimos, cantidad_esperada)
+
+
+    def test_cantidad_caminos_minimos_con_intermediario(self):
+
+        tp1 = TP1('ejemplo_enunciado.gdf')
+
+        tp1.calcular_caminos_minimos()
+
+        cantidad_total_caminos_minimos = 0
+
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 4, 36)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 1, 29)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 5, 16)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 6, 7)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 2, 5)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 3, 4)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 7, 3)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 11, 0)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 8, 0)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 10, 0)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 9, 0)
 
 
 if __name__ == '__main__':
