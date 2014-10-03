@@ -2,6 +2,7 @@
 # coding=utf-8
 from grafo import Grafo
 import re
+from heapq import heappop, heappush
 
 NODEDEF_TYPE = 1
 EDGEDEF_TYPE = 2
@@ -85,6 +86,49 @@ class TP1:
 
     def get_vertice_from_id(self, id):
         return self.vertice_from_id[id]
+
+    def recomendaciones_para(self, u):
+        """
+        O(|V|^2)
+        Devuelve un heap con las recomendaciones. Solo se recomienda en 
+        caso que exista algún amigo en común.
+        """
+        # O(|V|)
+        recomendaciones = []
+        for v in self.grafo.iternodes():
+            if u==v:
+                continue
+            # O(log(|V|))
+            if self.grafo.conectados(u,v):
+                continue
+            # O(|V|)
+            cantidad_conexiones_en_comun = - len(
+                    self.grafo.conexiones_en_comun(u,v))
+            if cantidad_conexiones_en_comun == 0:
+                continue
+            # O(log(|V|))
+            heappush(recomendaciones, (cantidad_conexiones_en_comun, v))
+        return recomendaciones
+
+    def recomendaciones(self):
+        """
+        O(|V|^3)
+        Devuelve un listado donde cada item tiene:
+        (vertice, recomendacion, amigos_en_comun)
+        """
+        recomendaciones = []
+        for u in self.grafo.iternodes(): # O(|V|)
+            recomendaciones_u = self.recomendaciones_para(u) # O(|V|^2)
+            max_amigos_comun = None
+            while len(recomendaciones_u) > 0:
+                # O(1)
+                amigos_comun, recomendacion = heappop(recomendaciones_u)
+                if max_amigos_comun is not None and amigos_comun > max_amigos_comun:
+                    break
+                recomendaciones.append(
+                        (u, recomendacion, -amigos_comun))
+                max_amigos_comun = amigos_comun
+        return recomendaciones
 
 
 import unittest
@@ -250,7 +294,38 @@ class TP1TestCase(unittest.TestCase):
                     set(['Roberto']),
                     set(['Juana'])])
 
-            
+    def test_recomendaciones(self):
+
+        tp1 = TP1('ejemplo_enunciado.gdf')
+
+        tp1.calcular_caminos_minimos()
+
+        recomendaciones = tp1.recomendaciones()
+
+        recomendaciones = [ (
+            tp1.grafo.get_node_data(u).description,
+            tp1.grafo.get_node_data(v).description,
+            amigos_comun ) for u, v, amigos_comun in
+            recomendaciones ]
+
+        #for x in recomendaciones:
+            #print x
+
+        self.assertIn(('Pablo','Juana',1), recomendaciones)
+        self.assertIn(('Juana','Esteban',1), recomendaciones)
+        self.assertIn(('Monica','Milena',2), recomendaciones)
+        self.assertIn(('Nora','Tomas',1), recomendaciones)
+        self.assertIn(('Lorena','Carlos',1), recomendaciones)
+        self.assertIn(('Brenda','Esteban',1), recomendaciones)
+        self.assertIn(('Milena','Carlos',2), recomendaciones)
+        self.assertIn(('Roberto','Esteban',2), recomendaciones)
+        self.assertIn(('Carlos','Milena',2), recomendaciones)
+        self.assertIn(('Tomas','Roberto',1), recomendaciones)
+        self.assertIn(('Esteban','Roberto',2), recomendaciones)
+
+
+
+
 
  
 

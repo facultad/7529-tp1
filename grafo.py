@@ -2,6 +2,7 @@
 # coding=utf-8
 import unittest
 from heapq import heappop, heappush
+from lista_ady import ListaAdy
 
 class Grafo:
 
@@ -9,9 +10,10 @@ class Grafo:
         self.cantidad_aristas = 0
         self.cantidad_vertices = 0
         self.node_data = []
-        self.vertices = []
+        self.pesos = []
         self.cantidad_caminos_minimos = []
         self.recorridos = []
+        self.lista_ady = []
         for i in xrange(cantidad_vertices):
             self.add_node()
         for peso in pesos:
@@ -25,22 +27,22 @@ class Grafo:
         """
         Complejidad: O(1)
         """
-        return len(self.vertices[u])
+        return len(self.pesos[u])
 
     def add_node(self, node_data=None):
         """
         Complejidad: O(1)
         """
         self.cantidad_vertices += 1
-        self.vertices.append({})
+        self.pesos.append({})
         self.node_data.append(node_data)
-
+        self.lista_ady.append(ListaAdy())
         self.cantidad_caminos_minimos.append(
-            [None for i in xrange(self.cantidad_vertices - 1)])
+            [0 for i in xrange(self.cantidad_vertices - 1)])
         self.recorridos.append(
             [None for i in xrange(self.cantidad_vertices - 1)])
         for i in self.iternodes():
-            self.cantidad_caminos_minimos[i].append(None)
+            self.cantidad_caminos_minimos[i].append(0)
             self.recorridos[i].append(None)
             
         return self.cantidad_vertices - 1
@@ -52,13 +54,20 @@ class Grafo:
         return self.node_data[u]
 
     def connect(self, u, v, peso=1, both=False):
-        self.vertices[u][v] = peso
+        """
+        O(log(n))
+        """
+        self.pesos[u][v] = peso
+        # O(log(n))
+        self.lista_ady[u].insert((v,peso))
         if both:
-          self.vertices[v][u] = peso
+            self.pesos[v][u] = peso
+            # O(log(n))
+            self.lista_ady[v].insert((u,peso))
         self.cantidad_aristas += 1
 
     def ady(self, v):
-        return self.vertices[v]
+        return self.pesos[v]
 
     def calcular_camino_minimo(self, vertice):
         distancia = [None] * self.cantidad_vertices
@@ -87,12 +96,51 @@ class Grafo:
         self.distancia[vertice] = distancia
         self.padre[vertice] = padre
 
+    def get_recorrido_anchura_caminos_minimos(self, u, v):
+        """
+        Obtiene el recorrido en anchura por caminos mínimos 
+        desde u hasta v.
+        O(|E|+|V|)
+        Está claro que por cada vertice que no hayamos visitado
+        intentamos acceder a sus padres para el camino minimo
+        buscado, con lo cual iteraremos como máximo sobre todos
+        los vertices y sobre todas las aristas.
+        """
+        visitado = [False for i in self.iternodes()]
+        q = [v]
+        recorrido = []
+        while len(q)>0:
+            w = q.pop(0)
+            if visitado[w]:
+                continue
+            visitado[w] = True
+            recorrido.insert(0,w)
+            for padre in self.padre[u][w]:
+                q.append(padre)
+        return recorrido
+
     def get_cantidad_caminos_minimos(self, u, v, intentar_al_reves=True):
         """
         Se obtiene la cantidad de recorridos de u a v.
         Previamente se debe haber llamado a calcular_camino_minimo(u)
         o calcular_camino_minimo(v).
+        O(|V|+|E|)
         """
+        # O(|V|+|E|)
+        recorrido = self.get_recorrido_anchura_caminos_minimos(u,v)
+
+        # O(|V|+|E|): Idem explicación get_recorrido_anchura_caminos_minimos
+        for w in recorrido: # O(|V|)
+            if self.cantidad_caminos_minimos[u][w] <> 0:
+                continue
+            if w==u:
+                self.cantidad_caminos_minimos[u][w] = 1
+            else:
+                for padre in self.padre[u][w]: #(|V|)
+                    self.cantidad_caminos_minimos[u][w] += (
+                        self.cantidad_caminos_minimos[u][padre] )
+        return self.cantidad_caminos_minimos[u][v]
+
         if u==v:
           return 1
         if u in self.padre:
@@ -154,7 +202,20 @@ class Grafo:
             return self.recorridos[u][v]
         raise Exception('Debe calcular previamente el camino mínimo.')
 
-        
+    def conectados(self, u, v):
+        """
+        O(log(|V|))
+        Verifica si u y v están conectados.
+        """
+        # O(log(n))
+        self.lista_ady[u].has(v)
+
+    def conexiones_en_comun(self, u, v):
+        """
+        O(|V|)
+        """
+        return self.lista_ady[u].intersection(
+                self.lista_ady[v])
 
     def iternodes(self):
         return xrange(self.cantidad_vertices)
@@ -321,6 +382,60 @@ class DijkstraTestCase(unittest.TestCase):
             [[7,2,0,1,3],
               [7,9,10,8,3],
               ])
+
+    def verificar_recorrido_anchura(self, recorrido, esperado):
+        recorrido_standarizado = []
+        desde = 0
+        for x in esperado:
+            recorrido_standarizado.append(
+                    set(recorrido[desde:desde+len(x)]))
+            desde+=len(x)
+        self.assertEqual(recorrido_standarizado, esperado)
+
+
+    def test_recorrido_anchura_caminos_minimos(self):
+ 
+        grafo = Grafo()
+
+        for i in xrange(14):
+            grafo.add_node()
+
+        grafo.connect(0,1,both=True)
+        grafo.connect(0,2,both=True)
+        grafo.connect(1,3,both=True)
+        grafo.connect(1,4,both=True)
+        grafo.connect(2,5,both=True)
+        grafo.connect(2,6,both=True)
+        grafo.connect(2,7,both=True)
+        grafo.connect(3,8,both=True)
+        grafo.connect(4,8,both=True)
+        grafo.connect(5,9,both=True)
+        grafo.connect(6,9,both=True)
+        grafo.connect(7,9,both=True)
+        grafo.connect(8,10,both=True)
+        grafo.connect(9,10,both=True)
+        grafo.connect(10,11,both=True)
+        grafo.connect(10,12,both=True)
+        grafo.connect(11,13,both=True)
+        grafo.connect(12,13,both=True)
+
+        for i in grafo.iternodes():
+            grafo.calcular_camino_minimo(i)
+
+        self.verificar_recorrido_anchura(
+                grafo.get_recorrido_anchura_caminos_minimos(0,13),
+                [
+                    set([0]),
+                    set([1,2]),
+                    set([3,4,5,6,7]),
+                    set([8,9]),
+                    set([10]),
+                    set([11,12]),
+                    set([13]),
+                    ])
+        
+
+
 
 
 if __name__ == '__main__':
