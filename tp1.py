@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # coding=utf-8
-import unittest
 from grafo import Grafo
 import re
 
@@ -27,7 +26,7 @@ class TP1:
         self.grafo = Grafo()
         self.vertice_from_id = {}
         linetype = None
-        
+
         with open(filepath) as f:
             for line in f:
                 line = line.strip()
@@ -57,7 +56,28 @@ class TP1:
         return popularidad
 
     def get_influencias(self):
-        pass
+        """
+        Con preprocesamiento previo de obtencion de cantidad de caminos
+        minimos: O(n^3)
+        """
+        # O(n)
+        influencias = [0 for w in self.grafo.iternodes()]
+
+        # O(n^3)
+        for u in self.grafo.iternodes():  # O(n)
+            for v in self.grafo.iternodes():  # O(n)
+                if u>=v:
+                    continue
+                # O(1) (c/preprocesamiento)
+                cantidad_u_v = self.grafo.get_cantidad_caminos_minimos(u,v)
+                for w in self.grafo.iternodes(): # O(n)
+                    if w==u or w==v:
+                        continue
+                    influencias[w] += float(
+                                # O(1) (c/preprocesamiento)
+                                self.grafo.get_cantidad_caminos_minimos_con_intermediario(u,w,v)
+                                ) / cantidad_u_v
+        return influencias
 
     def calcular_caminos_minimos(self):
         for i in self.grafo.iternodes():
@@ -65,6 +85,10 @@ class TP1:
 
     def get_vertice_from_id(self, id):
         return self.vertice_from_id[id]
+
+
+import unittest
+
 
 class TP1TestCase(unittest.TestCase):
 
@@ -194,6 +218,41 @@ class TP1TestCase(unittest.TestCase):
         self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 10, 0)
         self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 9, 0)
 
+    def test_get_influencias(self):
+
+        tp1 = TP1('ejemplo_enunciado.gdf')
+
+        tp1.calcular_caminos_minimos()
+
+        cantidad_total_caminos_minimos = 0
+
+        influencias = tp1.get_influencias()
+
+        vertices_por_influencia = {}
+        for i in xrange(len(influencias)):
+            vertices = vertices_por_influencia.get(
+                    influencias[i],set())
+            vertices.add(tp1.grafo.get_node_data(i).description)
+            vertices_por_influencia[influencias[i]] = vertices
+
+        influencias_ordenadas = [(influencia, vertices
+            ) for influencia,vertices in vertices_por_influencia.iteritems()]
+
+        influencias_ordenadas.sort()
+
+        self.assertEqual(
+                [ vertices for _, vertices in influencias_ordenadas],    
+                [set(['Tomas', 'Brenda', 'Lorena', 'Nora']),
+                    set(['Pablo']),
+                    set(['Milena', 'Monica']),
+                    set(['Esteban']),
+                    set(['Carlos']),
+                    set(['Roberto']),
+                    set(['Juana'])])
+
+            
+
+ 
 
 if __name__ == '__main__':
     unittest.main()
