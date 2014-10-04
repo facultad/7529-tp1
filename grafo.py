@@ -59,11 +59,11 @@ class Grafo:
         """
         self.pesos[u][v] = peso
         # O(log(n))
-        self.lista_ady[u].insert((v,peso))
+        self.lista_ady[u].insert(v)
         if both:
             self.pesos[v][u] = peso
             # O(log(n))
-            self.lista_ady[v].insert((u,peso))
+            self.lista_ady[v].insert(u)
         self.cantidad_aristas += 1
 
     def ady(self, v):
@@ -208,7 +208,7 @@ class Grafo:
         Verifica si u y v están conectados.
         """
         # O(log(n))
-        self.lista_ady[u].has(v)
+        return self.lista_ady[u].has(v)
 
     def conexiones_en_comun(self, u, v):
         """

@@ -308,9 +308,6 @@ class TP1TestCase(unittest.TestCase):
             amigos_comun ) for u, v, amigos_comun in
             recomendaciones ]
 
-        #for x in recomendaciones:
-            #print x
-
         self.assertIn(('Pablo','Juana',1), recomendaciones)
         self.assertIn(('Juana','Esteban',1), recomendaciones)
         self.assertIn(('Monica','Milena',2), recomendaciones)
