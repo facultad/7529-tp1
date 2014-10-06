@@ -31,8 +31,7 @@ class ListaAdy():
 
     def intersection(self, other):
         """
-        O(len(self.lista)+len(other.lista)) =
-        = O(|V|+|V|) = O(2*|V|) = O(|V|)
+        O(len(self.lista)+len(other.lista)) = O(n1+n2)
         """
         len_self = len(self.lista)
         len_other = len(other.lista)

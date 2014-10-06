@@ -212,7 +212,9 @@ class Grafo:
 
     def conexiones_en_comun(self, u, v):
         """
-        O(|V|)
+        Au: Cantidad de aristas que salen de u.
+        Av: Cantidad de aristas que salen de v.
+        O(Au+Av)
         """
         return self.lista_ady[u].intersection(
                 self.lista_ady[v])

@@ -89,19 +89,20 @@ class TP1:
 
     def recomendaciones_para(self, u):
         """
-        O(|V|^2)
+        Au: Cantidad de aristas que salen de u.
+        O(Sum(v in V,Au+Av)) = O(Au*|V|+|A|)
         Devuelve un heap con las recomendaciones. Solo se recomienda en 
         caso que exista algún amigo en común.
         """
-        # O(|V|)
+        # O(Au)
         recomendaciones = []
         for v in self.grafo.iternodes():
             if u==v:
                 continue
-            # O(log(|V|))
+            # O(log(Au))
             if self.grafo.conectados(u,v):
                 continue
-            # O(|V|)
+            # O(Au+Av)
             cantidad_conexiones_en_comun = - len(
                     self.grafo.conexiones_en_comun(u,v))
             if cantidad_conexiones_en_comun == 0:
@@ -112,13 +113,14 @@ class TP1:
 
     def recomendaciones(self):
         """
-        O(|V|^3)
+        O(Sum(u in V,Au*|V|+|A|)) = O(|V|*Sum(u in V,Au)+|V|*|A|) =
+        = O(|V|*|A|+|V|*|A|) = O(|V|*|A|)
         Devuelve un listado donde cada item tiene:
         (vertice, recomendacion, amigos_en_comun)
         """
         recomendaciones = []
-        for u in self.grafo.iternodes(): # O(|V|)
-            recomendaciones_u = self.recomendaciones_para(u) # O(|V|^2)
+        for u in self.grafo.iternodes():
+            recomendaciones_u = self.recomendaciones_para(u) # O(Au*|V|+|A|)
             max_amigos_comun = None
             while len(recomendaciones_u) > 0:
                 # O(1)
@@ -220,7 +222,7 @@ class TP1TestCase(unittest.TestCase):
                 cantidad_total_caminos_minimos += (
                         tp1.grafo.get_cantidad_caminos_minimos(u,v) )
 
-        self.assertEqual(cantidad_total_caminos_minimos, 121)
+        self.assertEqual(cantidad_total_caminos_minimos, 132/2)
 
     def verificar_cantidad_caminos_minimos_con_intermediario(self, tp1, id, cantidad_esperada):
 
@@ -250,13 +252,13 @@ class TP1TestCase(unittest.TestCase):
 
         cantidad_total_caminos_minimos = 0
 
-        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 4, 36)
-        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 1, 29)
-        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 5, 16)
-        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 6, 7)
-        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 2, 5)
-        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 3, 4)
-        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 7, 3)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 4, 38/2)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 1, 38/2)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 5, 22/2)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 6, 16/2)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 2, 10/2)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 3, 10/2)
+        self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 7, 4/2)
         self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 11, 0)
         self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 8, 0)
         self.verificar_cantidad_caminos_minimos_con_intermediario(tp1, 10, 0)
@@ -283,6 +285,9 @@ class TP1TestCase(unittest.TestCase):
             ) for influencia,vertices in vertices_por_influencia.iteritems()]
 
         influencias_ordenadas.sort()
+        
+        #for x in influencias_ordenadas:
+            #print x
 
         self.assertEqual(
                 [ vertices for _, vertices in influencias_ordenadas],    
