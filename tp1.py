@@ -17,6 +17,9 @@ class Node:
 
     @staticmethod
     def create_node_from_gdf_line(line):
+        """
+        O(1)
+        """
         fields = line.split(',')
         return Node(id=fields[0], description=fields[1])
 
@@ -24,6 +27,9 @@ class Node:
 class TP1:
 
     def __init__(self, filepath):
+        """
+        O(max(|E|,|V|)*|V|)
+        """
         self.grafo = Grafo()
         self.vertice_from_id = {}
         linetype = None
@@ -35,22 +41,35 @@ class TP1:
                     linetype = NODEDEF_TYPE
                 elif re_edgedef.match(line):
                     linetype = EDGEDEF_TYPE
-                elif linetype == NODEDEF_TYPE:
+                elif linetype == NODEDEF_TYPE: # |V|
+                    # O(1)
                     node = Node.create_node_from_gdf_line(line)
+                    # O(|V|)
+                    # TODO Ver si aplica vertice_from_id y cambiar implementación
                     self.vertice_from_id[node.id] = self.grafo.add_node(node)
-                elif linetype == EDGEDEF_TYPE:
+                elif linetype == EDGEDEF_TYPE: # |E|
                     id1, id2 = map(int, line.split(','))
-                    self.grafo.connect(
-                            self.vertice_from_id[id1],
-                            self.vertice_from_id[id2], both=True)
+                    # O(|V|)
+                    v1, v2 = self.vertice_from_id[id1], self.vertice_from_id[id2]
+                    # O(log(|V|))
+                    self.grafo.connect(v1, v2, both=True)
 
     def get_popularidad(self):
+        """
+        O(|V|)
+        Obtiene un listado L donde el componente L[i] contiene un 
+        listado de vertices con popularidad i. len(L) == |V|.
+        """
 
         popularidad = []
-        for i in xrange(self.grafo.cantidad_vertices):
+
+        # O(|V|)
+        for i in self.grafo.iternodes():
             popularidad.append([])
 
+        # O(|V|)
         for u in self.grafo.iternodes():
+            # O(1)
             grado = self.grafo.get_grado_salida(u)
             popularidad[grado].append(self.grafo.get_node_data(u))
 
@@ -58,20 +77,27 @@ class TP1:
 
     def get_influencias(self):
         """
-        Con preprocesamiento previo de obtencion de cantidad de caminos
-        minimos: O(n^3)
+        O((|V|**2)(|V|+|E|))
+        Se obtiene el índice de influencia por cada vertice.
         """
         # O(n)
         influencias = [0 for w in self.grafo.iternodes()]
 
-        # O(n^3)
-        for u in self.grafo.iternodes():  # O(n)
-            for v in self.grafo.iternodes():  # O(n)
+
+        # Preprocesamiento de cantidad de caminos mínimos
+        # O((|V|**2)(|V|+|E|))
+        for u in self.grafo.iternodes():  # |V|
+            for v in self.grafo.iternodes():  # |V|
+                cantidad_u_v = self.grafo.get_cantidad_caminos_minimos(u,v) # O(|V|+|E|)
+
+        # O(|V|**3)
+        for u in self.grafo.iternodes():  # |V|
+            for v in self.grafo.iternodes():  # |V|
                 if u>=v:
                     continue
-                # O(1) (c/preprocesamiento)
+                # O(1) c/preprocesamiento
                 cantidad_u_v = self.grafo.get_cantidad_caminos_minimos(u,v)
-                for w in self.grafo.iternodes(): # O(n)
+                for w in self.grafo.iternodes(): # |V|
                     if w==u or w==v:
                         continue
                     influencias[w] += float(
@@ -81,10 +107,18 @@ class TP1:
         return influencias
 
     def calcular_caminos_minimos(self):
+        """
+        O(|V|*|E|*log(|V|))
+        """
+        # |V|
         for i in self.grafo.iternodes():
+            # O(|E|*log(|V|))
             self.grafo.calcular_camino_minimo(i)
 
     def get_vertice_from_id(self, id):
+        """
+        O(|V|)
+        """
         return self.vertice_from_id[id]
 
     def recomendaciones_para(self, u):

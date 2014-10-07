@@ -7,6 +7,11 @@ from lista_ady import ListaAdy
 class Grafo:
 
     def __init__(self, cantidad_vertices=0, pesos=[]):
+        """
+        O(1) si los valores de los parámetros son los definidos 
+        por defecto.
+        O(|E|*log(|V|))
+        """
         self.cantidad_aristas = 0
         self.cantidad_vertices = 0
         self.node_data = []
@@ -19,13 +24,15 @@ class Grafo:
         for peso in pesos:
             if peso[2] < 0:
                 raise Exception('Una arista no puede tener peso negativo.')
+            # O(log(|V|))
             self.connect(peso[0], peso[1], peso[2])
         self.distancia = {}
         self.padre = {}
 
     def get_grado_salida(self, u):
         """
-        Complejidad: O(1)
+        O(1)
+        Obtiene el grado de salida de u.
         """
         return len(self.pesos[u])
 
@@ -55,14 +62,15 @@ class Grafo:
 
     def connect(self, u, v, peso=1, both=False):
         """
-        O(log(n))
+        O(log(Au)) si no se conecta a ambos.
+        O(max(log(Au),log(Av))) si se conecta a ambos.
         """
         self.pesos[u][v] = peso
-        # O(log(n))
+        # O(log(|V|))
         self.lista_ady[u].insert(v)
         if both:
             self.pesos[v][u] = peso
-            # O(log(n))
+            # O(log(|V|))
             self.lista_ady[v].insert(u)
         self.cantidad_aristas += 1
 
@@ -70,6 +78,9 @@ class Grafo:
         return self.pesos[v]
 
     def calcular_camino_minimo(self, vertice):
+        """
+        O(|E|*log(|V|))
+        """
         distancia = [None] * self.cantidad_vertices
         padre = [set() for i in self.iternodes()]
         visitado = [False] * self.cantidad_vertices
@@ -121,39 +132,34 @@ class Grafo:
 
     def get_cantidad_caminos_minimos(self, u, v, intentar_al_reves=True):
         """
+        O(1) mejor caso si hubo preprocesamiento.
+        O(|V|+|E|) en caso que no haya habido preprocesamiento.
         Se obtiene la cantidad de recorridos de u a v.
         Previamente se debe haber llamado a calcular_camino_minimo(u)
         o calcular_camino_minimo(v).
-        O(|V|+|E|)
         """
         # O(|V|+|E|)
         recorrido = self.get_recorrido_anchura_caminos_minimos(u,v)
 
         # O(|V|+|E|): Idem explicación get_recorrido_anchura_caminos_minimos
-        for w in recorrido: # O(|V|)
+        for w in recorrido:
             if self.cantidad_caminos_minimos[u][w] <> 0:
                 continue
             if w==u:
                 self.cantidad_caminos_minimos[u][w] = 1
             else:
-                for padre in self.padre[u][w]: #(|V|)
+                for padre in self.padre[u][w]:
                     self.cantidad_caminos_minimos[u][w] += (
                         self.cantidad_caminos_minimos[u][padre] )
         return self.cantidad_caminos_minimos[u][v]
 
-        if u==v:
-          return 1
-        if u in self.padre:
-            if self.cantidad_caminos_minimos[u][v] is None:
-                self.cantidad_caminos_minimos[u][v] = 0
-                for w in self.padre[u][v]:
-                    self.cantidad_caminos_minimos[u][v] += self.get_cantidad_caminos_minimos(u,w)
-            return self.cantidad_caminos_minimos[u][v]
-        if intentar_al_reves:
-            return self.get_cantidad_caminos_minimos(v, u, intentar_al_reves=False)
-        raise Exception('Debe calcular previamente el camino mínimo.')
-
     def get_cantidad_caminos_minimos_con_intermediario(self, u, w, v):
+        """
+        O(1) mejor caso si hubo preprocesamiento.
+        O(|V|+|E|) en caso que no haya habido preprocesamiento.
+        Se obtiene la cantidad de caminos mínimos entre u y v que
+        pasan por w.
+        """
         if (self.get_distancia(u,w) + self.get_distancia(w,v) 
             ) > self.get_distancia(u,v):
             return 0
