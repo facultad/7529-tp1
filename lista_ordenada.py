@@ -3,7 +3,7 @@
 
 import bisect
 
-class ListaAdy():
+class ListaOrdenada():
 
     def __init__(self):
         self.lista = []
@@ -58,11 +58,11 @@ class ListaAdy():
 import unittest
 
 
-class ListaAdyTestCase(unittest.TestCase):
+class ListaOrdenadaTestCase(unittest.TestCase):
     
     def test_insert(self):
 
-        l = ListaAdy()
+        l = ListaOrdenada()
 
         l.insert(10)
         l.insert(1)
@@ -76,7 +76,7 @@ class ListaAdyTestCase(unittest.TestCase):
 
     def test_has(self):
 
-        l = ListaAdy()
+        l = ListaOrdenada()
 
         l.insert(10)
         l.insert(1)
@@ -91,8 +91,8 @@ class ListaAdyTestCase(unittest.TestCase):
 
     def test_intersection(self):
 
-        l1 = ListaAdy()
-        l2 = ListaAdy()
+        l1 = ListaOrdenada()
+        l2 = ListaOrdenada()
 
         self.assertEqual(l1.intersection(l2), [])
 

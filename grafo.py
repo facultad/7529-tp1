@@ -2,7 +2,15 @@
 # coding=utf-8
 import unittest
 from heapq import heappop, heappush
-from lista_ady import ListaAdy
+from lista_ordenada import ListaOrdenada
+
+class CaminoInexistente(Exception):
+
+    def __init__(self, u, v, *args, **kwargs):
+
+        super(CaminoInexistente, self).__init__(
+                'Camino inexistente de %s a %s.' % (u, v),
+                *args, **kwargs)
 
 class Grafo:
 
@@ -43,7 +51,7 @@ class Grafo:
         self.cantidad_vertices += 1
         self.pesos.append({})
         self.node_data.append(node_data)
-        self.lista_ady.append(ListaAdy())
+        self.lista_ady.append(ListaOrdenada())
         self.cantidad_caminos_minimos.append(
             [0 for i in xrange(self.cantidad_vertices - 1)])
         self.recorridos.append(
@@ -107,6 +115,12 @@ class Grafo:
         self.distancia[vertice] = distancia
         self.padre[vertice] = padre
 
+    def verificar_existe_camino(self, u, v):
+        """
+        O(1)
+        """
+        self.get_distancia(u,v)
+
     def get_recorrido_anchura_caminos_minimos(self, u, v):
         """
         Obtiene el recorrido en anchura por caminos mínimos 
@@ -117,6 +131,9 @@ class Grafo:
         buscado, con lo cual iteraremos como máximo sobre todos
         los vertices y sobre todas las aristas.
         """
+        # Se verifica que exista un camino de u a v
+        self.verificar_existe_camino(u,v)
+
         visitado = [False for i in self.iternodes()]
         q = [v]
         recorrido = []
@@ -139,7 +156,10 @@ class Grafo:
         o calcular_camino_minimo(v).
         """
         # O(|V|+|E|)
-        recorrido = self.get_recorrido_anchura_caminos_minimos(u,v)
+        try:
+            recorrido = self.get_recorrido_anchura_caminos_minimos(u,v)
+        except CaminoInexistente:
+            return 0
 
         # O(|V|+|E|): Idem explicación get_recorrido_anchura_caminos_minimos
         for w in recorrido:
@@ -160,11 +180,14 @@ class Grafo:
         Se obtiene la cantidad de caminos mínimos entre u y v que
         pasan por w.
         """
-        if (self.get_distancia(u,w) + self.get_distancia(w,v) 
-            ) > self.get_distancia(u,v):
+        try:
+            if (self.get_distancia(u,w) + self.get_distancia(w,v) 
+                ) > self.get_distancia(u,v):
+                return 0
+            return ( self.get_cantidad_caminos_minimos(u,w) *
+                self.get_cantidad_caminos_minimos(w,v))
+        except CaminoInexistente:
             return 0
-        return ( self.get_cantidad_caminos_minimos(u,w) *
-            self.get_cantidad_caminos_minimos(w,v))
 
     def get_distancia(self, u, v, intentar_al_reves=True):
         """
@@ -173,7 +196,10 @@ class Grafo:
         o calcular_camino_minimo(v).
         """
         if u in self.distancia:
-            return self.distancia[u][v]
+            distancia = self.distancia[u][v]
+            if distancia is None:
+                raise CaminoInexistente(u,v)
+            return distancia
         if intentar_al_reves:
             return self.get_distancia(v, u, intentar_al_reves=False)
         raise Exception('Debe calcular previamente el camino mínimo.')
@@ -339,7 +365,7 @@ class DijkstraTestCase(unittest.TestCase):
         self.assertEqual(
             grafo.get_cantidad_caminos_minimos_con_intermediario(2,5,11),
             1)
-       
+ 
     def validar_recorrido(self, grafo, u, v, recorridos_esperados):
         recorridos = grafo.get_recorridos(u,v)
         self.assertEqual(len(recorridos), len(recorridos_esperados))
@@ -441,8 +467,103 @@ class DijkstraTestCase(unittest.TestCase):
                     set([11,12]),
                     set([13]),
                     ])
-        
 
+    def test_grafo_no_conexo(self):
+ 
+        grafo = Grafo()
+
+        for i in xrange(14):
+            grafo.add_node()
+
+        grafo.connect(0,1,both=True)
+        grafo.connect(0,2,both=True)
+        grafo.connect(1,3,both=True)
+        grafo.connect(1,4,both=True)
+        grafo.connect(2,5,both=True)
+        grafo.connect(2,6,both=True)
+        grafo.connect(2,7,both=True)
+        grafo.connect(3,8,both=True)
+        grafo.connect(4,8,both=True)
+        grafo.connect(5,9,both=True)
+        grafo.connect(6,9,both=True)
+        grafo.connect(7,9,both=True)
+        grafo.connect(10,11,both=True)
+        grafo.connect(10,12,both=True)
+        grafo.connect(11,13,both=True)
+        grafo.connect(12,13,both=True)
+
+        for i in grafo.iternodes():
+            grafo.calcular_camino_minimo(i)
+
+        self.assertRaises(CaminoInexistente,
+                grafo.get_distancia,0,10)
+        self.assertEqual(
+                grafo.get_distancia(8,9), 6)
+
+        self.assertRaises(CaminoInexistente,
+                grafo.get_recorrido_anchura_caminos_minimos,
+                0,13)
+
+        self.verificar_recorrido_anchura(
+                grafo.get_recorrido_anchura_caminos_minimos(0,9),
+                [
+                    set([0]),
+                    set([2]),
+                    set([5,6,7]),
+                    set([9]),
+                    ])
+
+        self.verificar_recorrido_anchura(
+                grafo.get_recorrido_anchura_caminos_minimos(13,10),
+                [
+                    set([13]),
+                    set([11,12]),
+                    set([10]),
+                    ])
+
+        self.validar_recorrido(grafo,0,8,
+            [[0,1,3,8],
+              [0,1,4,8],
+              ])
+        self.validar_recorrido(grafo,0,10,
+            [])
+        self.validar_recorrido(grafo,7,3,
+            [[7,2,0,1,3],
+              ])
+        self.validar_recorrido(grafo,13,4,
+            [])
+        self.validar_recorrido(grafo,11,12,
+            [[11,10,12],
+              [11,13,12],
+              ])
+
+
+        self.assertEqual(
+            grafo.get_cantidad_caminos_minimos_con_intermediario(0,13,10),
+            0)
+        self.assertEqual(
+            grafo.get_cantidad_caminos_minimos_con_intermediario(0,10,13),
+            0)
+        self.assertEqual(
+            grafo.get_cantidad_caminos_minimos_con_intermediario(0,1,8),
+            2)
+        self.assertEqual(
+            grafo.get_cantidad_caminos_minimos_con_intermediario(2,5,11),
+            0)
+        self.assertEqual(
+            grafo.get_cantidad_caminos_minimos_con_intermediario(2,5,11),
+            0)
+ 
+        self.assertEqual(
+            grafo.get_cantidad_caminos_minimos(2,10),0)
+        self.assertEqual(
+            grafo.get_cantidad_caminos_minimos(0,10),0)
+        self.assertEqual(
+            grafo.get_cantidad_caminos_minimos(0,13),0)
+        self.assertEqual(
+            grafo.get_cantidad_caminos_minimos(4,5),1)
+        self.assertEqual(
+            grafo.get_cantidad_caminos_minimos(8,9),6)
 
 
 
