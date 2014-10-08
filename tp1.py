@@ -3,6 +3,7 @@
 from grafo import Grafo
 import re
 from heapq import heappop, heappush
+import sys
 
 NODEDEF_TYPE = 1
 EDGEDEF_TYPE = 2
@@ -75,6 +76,45 @@ class TP1:
 
         return popularidad
 
+    def mostrar_popularidad(self, popularidad):
+        for i in xrange(len(popularidad)-1, -1, -1):
+            if len(popularidad[i]) == 0:
+                continue
+            print "#%s: %s" % (i, [ x.description for x in popularidad[i]])
+
+    def mostrar_influencias(self, influencias):
+
+
+        vertices_por_influencia = {}
+        for i in xrange(len(influencias)):
+            vertices = vertices_por_influencia.get(
+                    influencias[i],set())
+            vertices.add(self.grafo.get_node_data(i).description)
+            vertices_por_influencia[influencias[i]] = vertices
+
+        influencias_ordenadas = [(influencia, vertices
+            ) for influencia,vertices in vertices_por_influencia.iteritems()]
+
+        influencias_ordenadas.sort(reverse=True)
+        
+        for x in influencias_ordenadas:
+            print x
+
+    def mostrar_recomendaciones(self, recomendaciones):
+
+        recomendaciones.sort(key=lambda x:x[2], reverse=True)
+
+        _recomendaciones = [ (
+            self.grafo.get_node_data(u).description,
+            self.grafo.get_node_data(v).description,
+            amigos_comun ) for u, v, amigos_comun in
+            recomendaciones ]
+
+        for persona, recomendacion, amigos_comun in _recomendaciones:
+            print '%s: %s (%s amigo(s) en común)' % (
+                    persona, recomendacion, amigos_comun)
+
+
     def get_influencias(self):
         """
         O((|V|**2)(|V|+|E|))
@@ -97,6 +137,8 @@ class TP1:
                     continue
                 # O(1) c/preprocesamiento
                 cantidad_u_v = self.grafo.get_cantidad_caminos_minimos(u,v)
+                if cantidad_u_v == 0:
+                    continue
                 for w in self.grafo.iternodes(): # |V|
                     if w==u or w==v:
                         continue
@@ -360,10 +402,45 @@ class TP1TestCase(unittest.TestCase):
         self.assertIn(('Esteban','Roberto',2), recomendaciones)
 
 
+def inicio_seccion(nombre):
+    print '-----------------%s-----------------' % nombre
 
+def fin_seccion():
+    print '-------------------------------------------'
+    print
 
+def reporte_amigos_facebook_gdf(filepath):
+    
+    tp1 = TP1(filepath)
 
- 
+    tp1.calcular_caminos_minimos()
+
+    inicio_seccion('Archivo %s' % filepath)
+
+    inicio_seccion('popularidad')
+    popularidad = tp1.get_popularidad()
+    tp1.mostrar_popularidad(popularidad)
+    fin_seccion()
+
+    inicio_seccion('influencias')
+    influencias = tp1.get_influencias()
+    tp1.mostrar_influencias(influencias)
+    fin_seccion()
+
+    inicio_seccion('recomendaciones')
+    recomendaciones = tp1.recomendaciones()
+    tp1.mostrar_recomendaciones(recomendaciones)
+    fin_seccion()
+
+    fin_seccion()
+
+def reporte_amigos_facebook():
+    for filepath in sys.argv[1:]:
+        reporte_amigos_facebook_gdf(filepath)
+
 
 if __name__ == '__main__':
-    unittest.main()
+    if len(sys.argv) == 1:
+        unittest.main()
+    else:
+        reporte_amigos_facebook()
