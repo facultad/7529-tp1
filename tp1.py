@@ -77,39 +77,58 @@ class TP1:
         return popularidad
 
     def mostrar_popularidad(self, popularidad):
+        """
+        O(|V|)
+        """
         for i in xrange(len(popularidad)-1, -1, -1):
             if len(popularidad[i]) == 0:
                 continue
             print "#%s: %s" % (i, [ x.description for x in popularidad[i]])
 
     def mostrar_influencias(self, influencias):
-
+        """
+        O(|V|**2)
+        """
 
         vertices_por_influencia = {}
-        for i in xrange(len(influencias)):
-            vertices = vertices_por_influencia.get(
+
+        # O(|V|**2)
+        for i in xrange(len(influencias)): # |V|
+            # O(|V|)
+            vertices = vertices_por_influencia.get( 
                     influencias[i],set())
+            # O(|V|)
             vertices.add(self.grafo.get_node_data(i).description)
+            # O(|V|)
             vertices_por_influencia[influencias[i]] = vertices
 
+        # O(|V|)
         influencias_ordenadas = [(influencia, vertices
             ) for influencia,vertices in vertices_por_influencia.iteritems()]
 
+        # O(|V|*log(|V|))
         influencias_ordenadas.sort(reverse=True)
         
+        # O(|V|)
         for x in influencias_ordenadas:
             print x
 
     def mostrar_recomendaciones(self, recomendaciones):
+        """
+        O(n*log(n))
+        """
 
+        # O(n*log(n))
         recomendaciones.sort(key=lambda x:x[2], reverse=True)
 
+        # O(n)
         _recomendaciones = [ (
             self.grafo.get_node_data(u).description,
             self.grafo.get_node_data(v).description,
             amigos_comun ) for u, v, amigos_comun in
             recomendaciones ]
 
+        # O(n)
         for persona, recomendacion, amigos_comun in _recomendaciones:
             print '%s: %s (%s amigo(s) en común)' % (
                     persona, recomendacion, amigos_comun)
@@ -117,7 +136,7 @@ class TP1:
 
     def get_influencias(self):
         """
-        O((|V|**2)(|V|+|E|))
+        O((|V|**2)*(|V|+|E|))
         Se obtiene el índice de influencia por cada vertice.
         """
         # O(n)
@@ -125,7 +144,7 @@ class TP1:
 
 
         # Preprocesamiento de cantidad de caminos mínimos
-        # O((|V|**2)(|V|+|E|))
+        # O((|V|**2)*(|V|+|E|))
         for u in self.grafo.iternodes():  # |V|
             for v in self.grafo.iternodes():  # |V|
                 cantidad_u_v = self.grafo.get_cantidad_caminos_minimos(u,v) # O(|V|+|E|)
@@ -403,40 +422,49 @@ class TP1TestCase(unittest.TestCase):
 
 
 def inicio_seccion(nombre):
+    """
+    O(1)
+    """
     print '-----------------%s-----------------' % nombre
 
 def fin_seccion():
+    """
+    O(1)
+    """
     print '-------------------------------------------'
     print
 
 def reporte_amigos_facebook_gdf(filepath):
+    """
+    O((|V|**2)*(|V|+|A|))
+    """
     
-    tp1 = TP1(filepath)
+    tp1 = TP1(filepath) # O(max(|E|,|V|)*|V|)
 
-    tp1.calcular_caminos_minimos()
+    tp1.calcular_caminos_minimos() # O(|V|*|E|*log(|V|))
 
     inicio_seccion('Archivo %s' % filepath)
 
     inicio_seccion('popularidad')
-    popularidad = tp1.get_popularidad()
-    tp1.mostrar_popularidad(popularidad)
+    popularidad = tp1.get_popularidad() # O(|V|)
+    tp1.mostrar_popularidad(popularidad) # O(|V|)
     fin_seccion()
 
     inicio_seccion('influencias')
-    influencias = tp1.get_influencias()
-    tp1.mostrar_influencias(influencias)
+    influencias = tp1.get_influencias() # O((|V|**2)*(|V|+|A|))
+    tp1.mostrar_influencias(influencias) # O(|V|**2)
     fin_seccion()
 
     inicio_seccion('recomendaciones')
-    recomendaciones = tp1.recomendaciones()
-    tp1.mostrar_recomendaciones(recomendaciones)
+    recomendaciones = tp1.recomendaciones() # O(|V|*|A|)
+    tp1.mostrar_recomendaciones(recomendaciones) # O(n*log(n))
     fin_seccion()
 
     fin_seccion()
 
 def reporte_amigos_facebook():
     for filepath in sys.argv[1:]:
-        reporte_amigos_facebook_gdf(filepath)
+        reporte_amigos_facebook_gdf(filepath) # O((|V|**2)*(|V|+|A|))
 
 
 if __name__ == '__main__':
