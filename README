@@ -1,7 +1,18 @@
-Para ejecutar la aplicación:
+Ejecución de la aplicación
+--------------------------
 
 $ ./tp1.py [<path_a_archivo_gdf>, ...]
 
-Como parámetros simplemente pasar un listado de archivos gdf los cuales se desea sean procesados.
+Parémetros: simplemente pasar un listado de archivos gdf los cuales se desea procesar.
 
 La ejecución generará un reporte por salida estándar.
+
+
+Ejecución de las pruebas
+------------------------
+
+$ ./tp1.py
+$ ./grafo.py
+$ ./lista_ordenada.py
+
+Se mostrará el resultado de cada caso de pruebas.
