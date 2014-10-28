@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # coding=utf-8
-from grafo import Grafo
+from grafo import GrafoPesoUnitario
 import re
 from heapq import heappop, heappush
 import sys
@@ -27,11 +27,15 @@ class Node:
 
 class TP1:
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, grafo=None):
         """
         O(max(|E|,|V|)*|V|)
         """
-        self.grafo = Grafo()
+        if grafo is not None:
+            self.grafo = grafo
+        else:
+            self.grafo = GrafoPesoUnitario()
+
         self.vertice_from_id = {}
         linetype = None
 
@@ -169,11 +173,11 @@ class TP1:
 
     def calcular_caminos_minimos(self):
         """
-        O(|V|*|E|*log(|V|))
+        O(|V|*(|E|+|V|)
         """
         # |V|
         for i in self.grafo.iternodes():
-            # O(|E|*log(|V|))
+            # O(|V|+|E|)
             self.grafo.calcular_camino_minimo(i)
 
     def get_vertice_from_id(self, id):
@@ -441,7 +445,7 @@ def reporte_amigos_facebook_gdf(filepath):
     
     tp1 = TP1(filepath) # O(max(|E|,|V|)*|V|)
 
-    tp1.calcular_caminos_minimos() # O(|V|*|E|*log(|V|))
+    tp1.calcular_caminos_minimos() # O(|V|*(|E|+|V|)
 
     inicio_seccion('Archivo %s' % filepath)
 

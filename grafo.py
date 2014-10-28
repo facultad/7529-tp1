@@ -255,7 +255,46 @@ class Grafo:
         return xrange(self.cantidad_vertices)
 
 
-class DijkstraTestCase(unittest.TestCase):
+class GrafoPesoUnitario(Grafo):
+
+    def calcular_camino_minimo(self, u):
+        """
+        Calcula las distancias de u al resto de los vertices.
+        O(|E|+|V|)
+        """
+        distancia = [None] * self.cantidad_vertices
+        padre = [set() for i in self.iternodes()]
+        visitado = [False] * self.cantidad_vertices
+        q = [u]
+        distancia[u] = 0
+
+        while len(q)>0:
+            w = q.pop(0)
+            if visitado[w]:
+                continue
+            visitado[w] = True
+
+            for adyacente in self.ady(w):
+
+                q.append(adyacente)
+
+                if ( distancia[adyacente] is None or 
+                        distancia[w] + 1 < distancia[adyacente] ):
+                    distancia[adyacente] = distancia[w] + 1
+                    padre[adyacente] = set([ w ])
+                elif (distancia[w] + 1 == distancia[adyacente]):
+                    padre[adyacente].add(w)
+
+        self.distancia[u] = distancia
+        self.padre[u] = padre
+
+
+class GrafoTestCase(unittest.TestCase):
+
+    def __init__(self, *args, **kwargs):
+        super(GrafoTestCase, self).__init__(*args,**kwargs)
+        self.clase_grafo = Grafo
+
 
     def test_camino_minimo(self):
 
@@ -288,7 +327,7 @@ class DijkstraTestCase(unittest.TestCase):
 
     def test_cantidad_caminos_minimos(self):
 
-        grafo = Grafo()
+        grafo = self.clase_grafo()
 
         for i in xrange(14):
             grafo.add_node()
@@ -326,7 +365,7 @@ class DijkstraTestCase(unittest.TestCase):
 
     def test_cantidad_caminos_minimos_con_intermediario(self):
  
-        grafo = Grafo()
+        grafo = self.clase_grafo()
 
         for i in xrange(14):
             grafo.add_node()
@@ -374,7 +413,7 @@ class DijkstraTestCase(unittest.TestCase):
 
     def test_recorridos(self):
  
-        grafo = Grafo()
+        grafo = self.clase_grafo()
 
         for i in xrange(14):
             grafo.add_node()
@@ -429,7 +468,7 @@ class DijkstraTestCase(unittest.TestCase):
 
     def test_recorrido_anchura_caminos_minimos(self):
  
-        grafo = Grafo()
+        grafo = self.clase_grafo()
 
         for i in xrange(14):
             grafo.add_node()
@@ -470,7 +509,7 @@ class DijkstraTestCase(unittest.TestCase):
 
     def test_grafo_no_conexo(self):
  
-        grafo = Grafo()
+        grafo = self.clase_grafo()
 
         for i in xrange(14):
             grafo.add_node()
@@ -565,6 +604,12 @@ class DijkstraTestCase(unittest.TestCase):
         self.assertEqual(
             grafo.get_cantidad_caminos_minimos(8,9),6)
 
+
+class GrafoPesoUnitarioTestCase(GrafoTestCase):
+
+    def __init__(self, *args, **kwargs):
+        super(GrafoPesoUnitarioTestCase, self).__init__(*args,**kwargs)
+        self.clase_grafo = GrafoPesoUnitario
 
 
 if __name__ == '__main__':
