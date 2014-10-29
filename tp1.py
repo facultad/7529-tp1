@@ -137,18 +137,20 @@ class TP1:
 
     def get_influencias(self):
         """
-        O((|V|**2)*(|V|+|E|))
+        O(|V|**3)
         Se obtiene el índice de influencia por cada vertice.
         """
         # O(n)
         influencias = [0 for w in self.grafo.iternodes()]
 
 
+        """
         # Preprocesamiento de cantidad de caminos mínimos
         # O((|V|**2)*(|V|+|E|))
         for u in self.grafo.iternodes():  # |V|
             for v in self.grafo.iternodes():  # |V|
                 cantidad_u_v = self.grafo.get_cantidad_caminos_minimos(u,v) # O(|V|+|E|)
+        """
 
         # O(|V|**3)
         for u in self.grafo.iternodes():  # |V|
@@ -437,7 +439,7 @@ def fin_seccion():
 
 def reporte_amigos_facebook_gdf(filepath):
     """
-    O((|V|**2)*(|V|+|A|))
+    O(|V|**3)
     """
     
     tp1 = TP1(filepath) # O(max(|E|,|V|)*|V|)
@@ -452,7 +454,7 @@ def reporte_amigos_facebook_gdf(filepath):
     fin_seccion()
 
     inicio_seccion('influencias')
-    influencias = tp1.get_influencias() # O((|V|**2)*(|V|+|A|))
+    influencias = tp1.get_influencias() # O(|V|**3)
     tp1.mostrar_influencias(influencias) # O(|V|**2)
     fin_seccion()
 

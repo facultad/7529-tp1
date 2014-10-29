@@ -155,7 +155,6 @@ class Grafo:
         Previamente se debe haber llamado a calcular_camino_minimo(u)
         o calcular_camino_minimo(v).
         """
-        # O(|V|+|E|)
         if self.cantidad_caminos_minimos[u][v] <> 0:
             return self.cantidad_caminos_minimos[u][v]
 
@@ -270,26 +269,39 @@ class GrafoPesoUnitario(Grafo):
         visitado = [False] * self.cantidad_vertices
         q = [u]
         distancia[u] = 0
+        cantidad_caminos_minimos = [0] * self.cantidad_vertices
+        cantidad_caminos_minimos[u] = 1
 
         while len(q)>0:
             w = q.pop(0)
+
             if visitado[w]:
                 continue
+
             visitado[w] = True
 
             for adyacente in self.ady(w):
 
-                q.append(adyacente)
-
                 if ( distancia[adyacente] is None or 
                         distancia[w] + 1 < distancia[adyacente] ):
+                    q.append(adyacente)
                     distancia[adyacente] = distancia[w] + 1
                     padre[adyacente] = set([ w ])
+                    cantidad_caminos_minimos[adyacente] = cantidad_caminos_minimos[w] 
                 elif (distancia[w] + 1 == distancia[adyacente]):
                     padre[adyacente].add(w)
+                    cantidad_caminos_minimos[adyacente] += cantidad_caminos_minimos[w] 
 
         self.distancia[u] = distancia
         self.padre[u] = padre
+        self.cantidad_caminos_minimos[u] = cantidad_caminos_minimos
+
+    def get_cantidad_caminos_minimos(self, u, v, intentar_al_reves=True):
+        """
+        O(1)
+        """
+        return self.cantidad_caminos_minimos[u][v]
+
 
 
 class GrafoTestCase(unittest.TestCase):
