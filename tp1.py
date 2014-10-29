@@ -27,14 +27,11 @@ class Node:
 
 class TP1:
 
-    def __init__(self, filepath, grafo=None):
+    def __init__(self, filepath, clase_grafo=GrafoPesoUnitario):
         """
         O(max(|E|,|V|)*|V|)
         """
-        if grafo is not None:
-            self.grafo = grafo
-        else:
-            self.grafo = GrafoPesoUnitario()
+        self.grafo = clase_grafo()
 
         self.vertice_from_id = {}
         linetype = None

@@ -156,6 +156,9 @@ class Grafo:
         o calcular_camino_minimo(v).
         """
         # O(|V|+|E|)
+        if self.cantidad_caminos_minimos[u][v] <> 0:
+            return self.cantidad_caminos_minimos[u][v]
+
         try:
             recorrido = self.get_recorrido_anchura_caminos_minimos(u,v)
         except CaminoInexistente:
