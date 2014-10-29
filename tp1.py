@@ -140,6 +140,7 @@ class TP1:
         O(|V|**3)
         Se obtiene el índice de influencia por cada vertice.
         """
+        return [ self.grafo.get_influencia(u) for u in self.grafo.iternodes() ]
         # O(n)
         influencias = [0 for w in self.grafo.iternodes()]
 

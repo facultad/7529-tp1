@@ -27,6 +27,7 @@ class Grafo:
         self.cantidad_caminos_minimos = []
         self.recorridos = []
         self.lista_ady = []
+        self.influencias = []
         for i in xrange(cantidad_vertices):
             self.add_node()
         for peso in pesos:
@@ -59,6 +60,7 @@ class Grafo:
         for i in self.iternodes():
             self.cantidad_caminos_minimos[i].append(0)
             self.recorridos[i].append(None)
+        self.influencias.append(0)
             
         return self.cantidad_vertices - 1
 
@@ -264,6 +266,7 @@ class GrafoPesoUnitario(Grafo):
         Calcula las distancias de u al resto de los vertices.
         O(|E|+|V|)
         """
+
         distancia = [None] * self.cantidad_vertices
         padre = [set() for i in self.iternodes()]
         visitado = [False] * self.cantidad_vertices
@@ -271,9 +274,11 @@ class GrafoPesoUnitario(Grafo):
         distancia[u] = 0
         cantidad_caminos_minimos = [0] * self.cantidad_vertices
         cantidad_caminos_minimos[u] = 1
+        S = []
 
         while len(q)>0:
             w = q.pop(0)
+            S.append(w)
 
             if visitado[w]:
                 continue
@@ -295,6 +300,22 @@ class GrafoPesoUnitario(Grafo):
         self.distancia[u] = distancia
         self.padre[u] = padre
         self.cantidad_caminos_minimos[u] = cantidad_caminos_minimos
+
+        dependencias = [0 for i in self.iternodes()]
+        while len(S) > 0:
+            w = S.pop()
+            for v in padre[w]:
+                dependencias[v] += (float(cantidad_caminos_minimos[v]) /
+                        float(cantidad_caminos_minimos[w])) * (
+                                1 + dependencias[w])
+                if w <> u:
+                    self.influencias[w] += dependencias[w]
+        
+    def get_influencia(self, u):
+        """
+        O(1)
+        """
+        return self.influencias[u]
 
     def get_cantidad_caminos_minimos(self, u, v, intentar_al_reves=True):
         """
