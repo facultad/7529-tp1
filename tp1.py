@@ -137,48 +137,17 @@ class TP1:
 
     def get_influencias(self):
         """
-        O(|V|**3)
+        O(|V|*(|V|+|E|))
         Se obtiene el índice de influencia por cada vertice.
         """
+        self.grafo.calcular_influencias()
         return [ self.grafo.get_influencia(u) for u in self.grafo.iternodes() ]
-        # O(n)
-        influencias = [0 for w in self.grafo.iternodes()]
-
-
-        """
-        # Preprocesamiento de cantidad de caminos mínimos
-        # O((|V|**2)*(|V|+|E|))
-        for u in self.grafo.iternodes():  # |V|
-            for v in self.grafo.iternodes():  # |V|
-                cantidad_u_v = self.grafo.get_cantidad_caminos_minimos(u,v) # O(|V|+|E|)
-        """
-
-        # O(|V|**3)
-        for u in self.grafo.iternodes():  # |V|
-            for v in self.grafo.iternodes():  # |V|
-                if u>=v:
-                    continue
-                # O(1) c/preprocesamiento
-                cantidad_u_v = self.grafo.get_cantidad_caminos_minimos(u,v)
-                if cantidad_u_v == 0:
-                    continue
-                for w in self.grafo.iternodes(): # |V|
-                    if w==u or w==v:
-                        continue
-                    influencias[w] += float(
-                                # O(1) (c/preprocesamiento)
-                                self.grafo.get_cantidad_caminos_minimos_con_intermediario(u,w,v)
-                                ) / cantidad_u_v
-        return influencias
 
     def calcular_caminos_minimos(self):
         """
         O(|V|*(|E|+|V|)
         """
-        # |V|
-        for i in self.grafo.iternodes():
-            # O(|V|+|E|)
-            self.grafo.calcular_camino_minimo(i)
+        self.grafo.calcular_caminos_minimos()
 
     def get_vertice_from_id(self, id):
         """

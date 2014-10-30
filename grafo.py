@@ -258,8 +258,106 @@ class Grafo:
     def iternodes(self):
         return xrange(self.cantidad_vertices)
 
+    def calcular_influencias(self):
+        # O(n)
+        self.influencias = [0 for w in self.iternodes()]
+
+
+        # Preprocesamiento de cantidad de caminos mínimos
+        # O((|V|**2)*(|V|+|E|))
+        for u in self.iternodes():  # |V|
+            for v in self.iternodes():  # |V|
+                cantidad_u_v = self.get_cantidad_caminos_minimos(u,v) # O(|V|+|E|)
+
+        # O(|V|**3)
+        for u in self.iternodes():  # |V|
+            for v in self.iternodes():  # |V|
+                if u>=v:
+                    continue
+                # O(1) c/preprocesamiento
+                cantidad_u_v = self.get_cantidad_caminos_minimos(u,v)
+                if cantidad_u_v == 0:
+                    continue
+                for w in self.iternodes(): # |V|
+                    if w==u or w==v:
+                        continue
+                    influencias[w] += float(
+                                # O(1) (c/preprocesamiento)
+                                self.get_cantidad_caminos_minimos_con_intermediario(u,w,v)
+                                ) / cantidad_u_v
+        return self.influencias
+
+    def get_influencia(self, u):
+        """
+        O(1)
+        """
+        return self.influencias[u]
+
+    def calcular_caminos_minimos(self):
+        """
+        O(|V|*(|E|+|V|)
+        """
+        # |V|
+        for i in self.iternodes():
+            # O(|V|+|E|)
+            self.calcular_camino_minimo(i)
+
+
 
 class GrafoPesoUnitario(Grafo):
+
+    def bfs(self, u):
+        """
+        O(|V|+|E|)
+        Devuelve un listado comenzando poe la raiz (u) y terminando 
+        por los vertices a mayor distancia de u.
+        Es requisito que ya se hayan calculado los caminos mínimos
+        para el vértice u
+        """
+
+        s=[]
+
+        visitado = [False] * self.cantidad_vertices
+        q = [u]
+
+        while len(q)>0:
+            w = q.pop(0)
+
+            if visitado[w]:
+                continue
+
+            visitado[w] = True
+
+            s.append(w)
+
+            for a in self.ady(w):
+                if ( self.distancia[u][w] + 1 == self.distancia[u][a] ):
+                    q.append(a)
+        return s
+
+    def __acumular_influencias(self, u):
+        # O(|V|+|E|)
+        S = self.bfs(u)
+
+        # O(|E|)
+        # Se acumulan las influencias a partir del calculo de
+        # dependencias del vertice u hacia el resto.
+        dependencias = [0 for i in self.iternodes()]
+        while len(S) > 0:
+            w = S.pop()
+            for v in self.padre[u][w]:
+                dependencias[v] += (float(self.cantidad_caminos_minimos[u][v]) /
+                        float(self.cantidad_caminos_minimos[u][w])) * (
+                                1 + dependencias[w])
+                if w <> u:
+                    self.influencias[w] += dependencias[w]
+
+    def calcular_influencias(self):
+        """
+        # O(|V|*(|V|+|E|))
+        """
+        for u in self.iternodes(): #|V|
+            self.__acumular_influencias(u) # O(|V|+|E|)
 
     def calcular_camino_minimo(self, u):
         """
@@ -274,11 +372,9 @@ class GrafoPesoUnitario(Grafo):
         distancia[u] = 0
         cantidad_caminos_minimos = [0] * self.cantidad_vertices
         cantidad_caminos_minimos[u] = 1
-        S = []
 
         while len(q)>0:
             w = q.pop(0)
-            S.append(w)
 
             if visitado[w]:
                 continue
@@ -300,22 +396,6 @@ class GrafoPesoUnitario(Grafo):
         self.distancia[u] = distancia
         self.padre[u] = padre
         self.cantidad_caminos_minimos[u] = cantidad_caminos_minimos
-
-        dependencias = [0 for i in self.iternodes()]
-        while len(S) > 0:
-            w = S.pop()
-            for v in padre[w]:
-                dependencias[v] += (float(cantidad_caminos_minimos[v]) /
-                        float(cantidad_caminos_minimos[w])) * (
-                                1 + dependencias[w])
-                if w <> u:
-                    self.influencias[w] += dependencias[w]
-        
-    def get_influencia(self, u):
-        """
-        O(1)
-        """
-        return self.influencias[u]
 
     def get_cantidad_caminos_minimos(self, u, v, intentar_al_reves=True):
         """
